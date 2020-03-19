@@ -17,7 +17,12 @@ The overall confidence interval for each regression coefficient, along with
 its overall estimate.
 }
 \description{
-This function determines overall confidence intervals and estimates for each
-regression coefficient.
-(EXPAND ON THIS)
+This function takes in a list of linear regression coefficient estimates generated
+by a Bag of Little Bootstraps procedure. Then, empirical confidence intervals and
+point estimates of each coefficient are determined for each subsample. Afterwards,
+the endpoints of all confidence intervals are averaged to form overall confidence
+intervals, and point estimates are averaged to form overall estimates. It should be
+noted that the confidence intervals are not multiple confidence intervals. For
+Bonferroni-corrected confidence intervals, divide the desired value of alpha by the
+number of regression coefficients.
 }

@@ -1,19 +1,24 @@
 #' Linear Regression Using Bag of Little Bootstraps
 #'
-#' This function fits a linear regression model using BLB.
-#' (EXPAND ON THIS)
+#' This function takes in a dataframe of observations, split into explanatory variables
+#' and response variable, and splits the data into a specified number of subsamples.
+#' Then, each subsample is resampled a specified number of times. Then, for each
+#' resample, a linear regression model is fit, and the estimates for each regression
+#' coefficient, as well as for the error variance. These estimates are returned to the
+#' user, and they can be used to determine confidence intervals for the error variance
+#' and each regression coefficient, and prediction intervals for new data.
 #'
 #' @param x A dataframe of the explanatory variables of all observations.
 #' @param y A numeric vector of the response variable of all observations.
 #' @param s The number of subsamples to split the data into. Default value is 10.
 #' @param r The number of bootstrap samples to generate from each subsample. Default
 #' value is 1000.
-#' @return bootstrap_coefficient_estimates: The estimates of all regression coefficients
-#' for each bootstrap sample. This list has an element for each subsample, and each
-#' element stores the estimates for each bootstrap sample in a matrix.
-#' @return bootstrap_s2_estimates: The estimates of sigma-squared for each bootstrap
-#' sample. This list has an element for each subsample, and each element stores the
-#' estimates for each bootstrap sample in a vector.
+#' @return bootstrap_coefficient_estimates: The BLB estimates of all regression
+#' coefficients. This list has an element for each subsample, and each element stores
+#' the estimates for each bootstrap sample in a matrix.
+#' @return bootstrap_s2_estimates: The BLB estimates of sigma-squared (error variance).
+#' This list has an element for each subsample, and each element stores the estimates
+#' for each bootstrap sample in a vector.
 #' @export
 linear_reg_bs <- function(x, y, s = 10, r = 1000) {
   n <- dim(x)[1]
