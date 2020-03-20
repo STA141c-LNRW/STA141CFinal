@@ -72,22 +72,27 @@ void linear_reg_bs_par_C(DataFrame x, arma::colvec y, int s, int r){
   // x_samples(split, p, s)
   // x_samples(split, p, i)
   // need to count split
+  std::vector<std::vector<double>> bs_coefs;
+  std::vector<std::vector<double>> bs_s2;
   for (int i = 0; i < s; i++){
-    std::vector<int> f(r);
+    std::vector<double> sample_coefs(r);
+    std::vector<double> sample_s2(r);
     int n_sub = keepsplit;
     if (x_samples(keepsplit, 1, i) != 1){
-      n_sub = n_sub - 1;
+       n_sub = n_sub - 1;
     }
-    std::fill(f.begin(), f.end(), 1);
-    std::discrete_distribution<int> distribution(f.begin(), f.end());
-    std::default_random_engine generator(i);
-    std::fill(f.begin(), f.end(), 0);
-    for (int j = 0; j < n; j++){
-      int number = distribution(generator);
-      ++f[number];
-    }
-    for (freq:f){
+    for (int j = 0; j < r; j++){
+      std::vector<int> f(r);
+      std::fill(f.begin(), f.end(), 1);
+      std::discrete_distribution<int> distribution(f.begin(), f.end());
+      std::default_random_engine generator(i);
+      std::fill(f.begin(), f.end(), 0);
+      for (int j = 0; j < n; j++){
+        int number = distribution(generator);
+        ++f[number];
+      }
+      for (freq:f){
 
-    }
+      }
   }
 }
