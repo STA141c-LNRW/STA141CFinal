@@ -1,0 +1,23 @@
+---
+title: "Untitled"
+author: "William Shih"
+date: "3/19/2020"
+output: pdf_document
+---
+
+```{r, echo = FALSE}
+library(Rcpp)
+library(RcppArmadillo)
+library(rbenchmark)
+x = data.frame(1:3000, 3001:6000 + runif(3000, 0, 1000))
+y = 6001:9000 + runif(3000, 0, 2000)
+s = 10
+r = 30
+sourceCpp("C/linear_reg_bs.cpp")
+source("R/linear_reg_bs_FIXED.R")
+benchmark("R no paralleization" = {linear_reg_bs(x,y,s,r)},
+          "C++" = {linear_reg_bs_C(x,y,s,r)},
+          replications = 100, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self"))
+          
+```

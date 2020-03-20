@@ -6,8 +6,19 @@ using namespace Rcpp;
 // [[Rcpp::depends(BH)]]
 // [[Rcpp::depends(RcppArmadillo)]]
 
+/*
+library(Rcpp)
+library(RcppArmadillo)
+x = data.frame(1:3000, 3001:6000 + runif(3000, 0, 1000))
+y = 6001:9000 + runif(3000, 0, 2000)
+s = 10
+r = 30
+ sourceCpp("C/linear_reg_bs_par.cpp")
+ linear_reg_bs_par_C(x,y,s,r)
+*/
+
 // [[Rcpp::export]]
-List linear_reg_bs_par_C(DataFrame x, arma::colvec y, int s, int r){
+List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r){
   int n = x.nrows();
   int p = x.size() + 1;
   arma::mat z(n,p);
@@ -47,7 +58,6 @@ List linear_reg_bs_par_C(DataFrame x, arma::colvec y, int s, int r){
       sum++;
     }
   }
-  Rcout << "Past printing" << std::endl;
   // x_samples(split, p, s)
   // x_samples(split, p, i)
   // need to count split
@@ -83,7 +93,6 @@ List linear_reg_bs_par_C(DataFrame x, arma::colvec y, int s, int r){
           row++;
         }
       }
-      Rcout << i << "," << j << std::endl;
       arma::mat transx_resamp = trans(x_resamp);
       arma::mat xtxinverse = arma::inv(transx_resamp * x_resamp);
       arma::mat coefs = xtxinverse * transx_resamp * y_resamp;
