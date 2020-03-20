@@ -18,6 +18,7 @@ linear_reg_bs <- function(x, y, s = 10, r = 1000) {
     for (j in 1:r){
       freqs <- rmultinom(1, n, rep(1, n_sub))
       resamp = subset[rep(seq_len(nrow(subset)), freqs),]
+      print(resamp)
       x_resamp <- as.matrix(resamp[,1:p])
       y_resamp <- as.matrix(resamp[,p+1])
       coefs <- solve(t(x_resamp) %*% x_resamp) %*% t(x_resamp) %*% y_resamp

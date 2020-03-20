@@ -6,19 +6,8 @@ using namespace Rcpp;
 // [[Rcpp::depends(BH)]]
 // [[Rcpp::depends(RcppArmadillo)]]
 
-/*
-library(Rcpp)
-library(RcppArmadillo)
-x = data.frame(1:3000 + runif(3000,0,100), 3001:6000 + runif(3000,0,100))
-y = 6001:9000 + runif(3000, 0, 100)
-s = 10
-r = 100
- sourceCpp("C/linear_reg_bs_par.cpp")
- linear_reg_bs_par_C(x,y,s,r)
-*/
-
 // [[Rcpp::export]]
-void linear_reg_bs_par_C(DataFrame x, arma::colvec y, int s, int r){
+List linear_reg_bs_par_C(DataFrame x, arma::colvec y, int s, int r){
   int n = x.nrows();
   int p = x.size() + 1;
   arma::mat z(n,p);
@@ -58,41 +47,57 @@ void linear_reg_bs_par_C(DataFrame x, arma::colvec y, int s, int r){
       sum++;
     }
   }
-  for (int i = 0; i < s; i++){
-    for (int j = 0; j < keepsplit; j++){
-      for(int k = 0; k < p; k++){
-        // x_samples(split, p ,s)
-        // y_samples(split, s)
-        Rcout << x_samples(j,k,i) << ",";
-      }
-      Rcout << ",y = " << y_samples(j,i);
-      Rcout << std::endl;
-    }
-  }
+  Rcout << "Past printing" << std::endl;
   // x_samples(split, p, s)
   // x_samples(split, p, i)
   // need to count split
-  std::vector<std::vector<double>> bs_coefs;
-  std::vector<std::vector<double>> bs_s2;
+  List bs_coefs(s);
+  List bs_s2(s);
   for (int i = 0; i < s; i++){
-    std::vector<double> sample_coefs(r);
-    std::vector<double> sample_s2(r);
+    NumericMatrix sample_coefs(p,r);
+    NumericVector sample_s2(r);
     int n_sub = keepsplit;
-    if (x_samples(keepsplit, 1, i) != 1){
+    if (x_samples(keepsplit - 1, 1, i) != 1){
        n_sub = n_sub - 1;
     }
     for (int j = 0; j < r; j++){
-      std::vector<int> f(r);
-      std::fill(f.begin(), f.end(), 1);
-      std::discrete_distribution<int> distribution(f.begin(), f.end());
-      std::default_random_engine generator(i);
-      std::fill(f.begin(), f.end(), 0);
-      for (int j = 0; j < n; j++){
+      std::vector<int> freqs(n_sub);
+      std::fill(freqs.begin(), freqs.end(), 1);
+      std::discrete_distribution<int> distribution(freqs.begin(), freqs.end());
+      std::default_random_engine generator(j);
+      std::fill(freqs.begin(), freqs.end(), 0);
+      for (int k = 0; k < n; k++){
         int number = distribution(generator);
-        ++f[number];
+        ++freqs[number];
       }
-      for (freq:f){
-
+      arma::mat x_resamp(n,p);
+      arma::mat y_resamp(n,1);
+      int row = 0;
+      for (int k = 0; k < n_sub; k++){
+        int repeat = freqs[k];
+        for (int l = 0; l < repeat; l++){
+          for (int m = 0; m < p; m++){
+            x_resamp(row, m) = x_samples(k, m, i);
+          }
+          y_resamp(row, 0) = y_samples(k, i);
+          row++;
+        }
       }
+      Rcout << i << "," << j << std::endl;
+      arma::mat transx_resamp = trans(x_resamp);
+      arma::mat xtxinverse = arma::inv(transx_resamp * x_resamp);
+      arma::mat coefs = xtxinverse * transx_resamp * y_resamp;
+      arma::mat fv = x_resamp * coefs;
+      arma::mat res = y_resamp - fv;
+      sample_s2(j) = std::inner_product(res.begin(), res.end(), res.begin(), 0.)/
+        (n_sub - p);
+      for (int k = 0; k < p; k++){
+        sample_coefs(k,j) = coefs[k];
+      }
+    }
+    bs_coefs(i) = sample_coefs;
+    bs_s2(i) = sample_s2;
   }
+  return List::create(_["bootstrap_coefficient_estimates"] = bs_coefs,
+                      _["bootstrap_s2_estimates"] = bs_s2);
 }
