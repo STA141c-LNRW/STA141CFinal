@@ -31,11 +31,13 @@ linear_reg_bs_par <- function(x, y, s = 10, r = 1000) {
   x_samples <- split(x1[sample_indices,], samples)
   y_samples <- split(y[sample_indices], samples)
   bs_coefs_s2 <- future_map(1:s, function(i) {
-    freqs <- rmultinom(1, n, rep(1, r))
     n_sub <- length(y_samples[[i]])
-    sample_coefs_s2 <- future_map(freqs, function(freq) {
-      x_resamp <- as.matrix(x_samples[[i]][sample(n_sub, freq, TRUE),])
-      y_resamp <- as.matrix(y_samples[[i]][sample(n_sub, freq, TRUE)])
+    subset <- data.frame(x_samples[[i]], y_samples[[i]])
+    sample_coefs_s2 <- future_map(1:r, function(j) {
+      freqs <- rmultinom(1, n, rep(1, n_sub))
+      resamp = subset[rep(seq_len(nrow(subset)), freqs),]
+      x_resamp <- as.matrix(resamp[, 1:p])
+      y_resamp <- as.matrix(resamp[, p+1])
       coefs <- solve(t(x_resamp) %*% x_resamp) %*% t(x_resamp) %*% y_resamp
       fv <- x_resamp %*% coefs
       res <- y_resamp - fv

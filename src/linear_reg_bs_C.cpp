@@ -1,22 +1,29 @@
 #include <RcppArmadillo.h>
 #include <boost/math/distributions/students_t.hpp>
-
 using namespace Rcpp;
-
+//' This function takes in a dataframe of observations, split into explanatory variables
+//' and response variable, and splits the data into a specified number of subsamples.
+//' Then, each subsample is resampled a specified number of times. Afterwards, for each
+//' resample, a linear regression model is fit, and the estimates for each regression
+//' coefficient, as well as for the error variance. These estimates are returned to the
+//' user, and they can be used to determine confidence intervals for the error variance
+//' and each regression coefficient, as well as prediction intervals for new data. The
+//' difference between this function and linear_reg_bs is that this function is written
+//' in C++ instead of R for faster performance.
+//' @param x A dataframe of the explanatory variables of all observations.
+//' @param y A numeric vector of the response variable of all observations.
+//' @param s The number of subsamples to split the data into. Default value is 10.
+//' @param r The number of bootstrap samples to generate from each subsample. Default
+//' value is 1000.
+//' @return bootstrap_coefficient_estimates: The BLB estimates of all regression
+//' coefficients. This list has an element for each subsample, and each element stores
+//' the estimates for each bootstrap sample in a matrix.
+//' @return bootstrap_s2_estimates: The BLB estimates of sigma-squared (error variance).
+//' This list has an element for each subsample, and each element stores the estimates
+//' for each bootstrap sample in a vector.
+//' @export
 // [[Rcpp::depends(BH)]]
 // [[Rcpp::depends(RcppArmadillo)]]
-
-/*
-library(Rcpp)
-library(RcppArmadillo)
-x = data.frame(1:3000, 3001:6000 + runif(3000, 0, 1000))
-y = 6001:9000 + runif(3000, 0, 2000)
-s = 10
-r = 30
- sourceCpp("C/linear_reg_bs_par.cpp")
- linear_reg_bs_par_C(x,y,s,r)
-*/
-
 // [[Rcpp::export]]
 List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r){
   int n = x.nrows();
@@ -68,7 +75,7 @@ List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r){
     NumericVector sample_s2(r);
     int n_sub = keepsplit;
     if (x_samples(keepsplit - 1, 1, i) != 1){
-       n_sub = n_sub - 1;
+      n_sub = n_sub - 1;
     }
     for (int j = 0; j < r; j++){
       std::vector<int> freqs(n_sub);

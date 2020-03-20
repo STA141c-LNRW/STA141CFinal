@@ -1,22 +1,24 @@
 Package: STA141CFinal
 Title: Implementation of Multiple Linear Regression using BLB
 Version: 0.0.0.9000
-Authors@R: c(
-  person("William", "Shih", email = "wshih@ucdavis.edu", role = c("aut")),
-  person("Ricardo", "Simpao", email = "rlsimpao@ucdavis.edu", role = c("aut")),
-  person("Nilay", "Varshney", email = "nvarshney@ucdavis.edu", role = c("aut", "cre")),
-  person("Luke", "Yee", email = "leyee@ucdavis.edu", role = c("aut")))
-Description: This package provides functions for fitting linear regression models on
-  datasets with continuous response variables through the use of Bag of Little
-  Bootstraps. Users can determine regression coefficients, estimate the variance of
-  errors, and predict new data. Users also have the option to use parallel computing.
+Authors@R: 
+    c(person("William", "Shih", email = "wshih@ucdavis.edu", role = c("aut")),
+    person("Ricardo", "Simpao", email = "rlsimpao@ucdavis.edu", role = c("aut")),
+    person("Nilay", "Varshney", email = "nvarshney@ucdavis.edu", role = c("aut", "cre")),
+    person("Luke", "Yee", email = "leyee@ucdavis.edu", role = c("aut")))
+Description: This R package provides functions for fitting linear regression models on 
+  datasets with continuous response variables through the use of Bag of Little Bootstraps. 
+  Users can determine regression coefficients, estimate the variance of errors, and predict 
+  new data. Users also have the option to use parallel computing.
 Encoding: UTF-8
 LazyData: true
 Depends:
-        purrr,
-        furrr
-RoxygenNote: 7.0.2
+    purrr,
+    furrr
+RoxygenNote: 7.1.0
 LinkingTo: 
-    Rcpp
+    Rcpp,
+    RcppArmadillo,
+    BH
 Imports: 
     Rcpp
