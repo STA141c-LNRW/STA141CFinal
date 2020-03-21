@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
-#include <boost/math/distributions/students_t.hpp>
+
 using namespace Rcpp;
+
 //' This function takes in a dataframe of observations, split into explanatory variables
 //' and response variable, and splits the data into a specified number of subsamples.
 //' Then, each subsample is resampled a specified number of times. Afterwards, for each
@@ -22,8 +23,8 @@ using namespace Rcpp;
 //' This list has an element for each subsample, and each element stores the estimates
 //' for each bootstrap sample in a vector.
 //' @export
-// [[Rcpp::depends(BH)]]
 // [[Rcpp::depends(RcppArmadillo)]]
+
 // [[Rcpp::export]]
 List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r){
   int n = x.nrows();
@@ -111,6 +112,9 @@ List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r){
         sample_coefs(k,j) = coefs[k];
       }
     }
+    CharacterVector na = x.names();
+    na.push_front("Intercept");
+    rownames(sample_coefs) = na;
     bs_coefs(i) = sample_coefs;
     bs_s2(i) = sample_s2;
   }
