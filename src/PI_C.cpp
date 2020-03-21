@@ -20,10 +20,6 @@ NumericMatrix PI_C(List lrbs, DataFrame x, double alpha){
     NumericVector temp = x[i-1];
     std::copy(temp.begin(), temp.end(), z.begin() + i*n);
   }
-  // R version has x.nrows() * replications * coefs.size()
-  // preds is replications * coefs.size() * x.nrows()
-  // preds is 12*10*100
-  //arma::cube preds(x.nrows(), replications, coefs.size(), fill::zeros);
   arma::cube preds(replications, coefs.size(), x.nrows(), arma::fill::zeros);
   NumericMatrix prediction_intervals(x.nrows(), 3);
   for (int i = 0; i < coefs.size(); i++){
