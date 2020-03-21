@@ -11,13 +11,13 @@ The dataset used in the user guide can be found at the link below. Note that the
 
 archive.ics.uci.edu/ml/datasets/SGEMM+GPU+kernel+performance
 
-#TestRandC.pdf 
+# TestRandC.pdf 
 file shows the results of benchmarking basic R and C functions to see what to use for the final package.
 
-#User_Guide.pdf 
+# User_Guide.pdf 
 file shows the user guide on how to use the package.
 
-#package_demo.pdf 
+# package_demo.pdf 
 benchmarks the 8 R functions in the package versus the 4 C++ functions in the package.
 
 There are 8 R files corresponding to 8 R functions:
