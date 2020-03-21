@@ -1,7 +1,11 @@
 #include <RcppArmadillo.h>
+
 using namespace Rcpp;
 
-//' This function takes in a dataframe of observations, split into explanatory variables
+//' @name linear_reg_bs_C
+//' @title Linear Regression Using Bag of Little Bootstraps
+//'
+//' @description This function takes in a dataframe of observations, split into explanatory variables
 //' and response variable, and splits the data into a specified number of subsamples.
 //' Then, each subsample is resampled a specified number of times. Afterwards, for each
 //' resample, a linear regression model is fit, and the estimates for each regression
@@ -9,7 +13,8 @@ using namespace Rcpp;
 //' user, and they can be used to determine confidence intervals for the error variance
 //' and each regression coefficient, as well as prediction intervals for new data. The
 //' difference between this function and linear_reg_bs is that this function is written
-//' in C++ instead of R for faster performance.
+//' in C++ instead of R for faster performance. The function uses RcppArmadillo for fast matrix computation and for using arma::cube.
+//'
 //'
 //' @param x A dataframe of the explanatory variables of all observations.
 //' @param y A numeric vector of the response variable of all observations.
@@ -23,8 +28,6 @@ using namespace Rcpp;
 //' This list has an element for each subsample, and each element stores the estimates
 //' for each bootstrap sample in a vector.
 //' @export
-//'
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r){
   int n = x.nrows();

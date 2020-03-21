@@ -1,7 +1,11 @@
 #include <RcppArmadillo.h>
+
 using namespace Rcpp;
 
-//' This function takes in a list of linear regression coefficient estimates generated
+//' @name PI_C
+//' @title Prediction Intervals and Estimates for New Data
+//'
+//' @description This function takes in a list of linear regression coefficient estimates generated
 //' by a Bag of Little Bootstraps procedure, and a dataframe of observations without the
 //' response variable. The response variable for each observation is predicted using
 //' each vector of coefficient estimates for each sample. Then, empirical prediction
@@ -10,9 +14,10 @@ using namespace Rcpp;
 //' to form overall prediction intervals, and point estimates are averaged to form
 //' overall predictions. It should be noted that the prediction intervals are not
 //' multiple prediction intervals. For Bonferroni-corrected prediction intervals, divide
-//' the desired value of alpha by the number of observations. The difference between
-//' this function and PI is that this function is written in C++ instead of R for faster
-//' performance.
+//' the desired value of alpha by the number of observations. This uses C++ instead of R for
+//' for faster computation times. The C++ function uses RcppArmadillo for the arma::cube data type. 
+//' Ordinary matrix multiplication is used instead of Armadillo
+//' to reduce the amount of conversion from NumericMatrix to arma::mat
 //'
 //' @param lrbs A linear_reg_bs or linear_reg_bs_par object containing BLB regression
 //' coefficient estimates.
@@ -21,8 +26,6 @@ using namespace Rcpp;
 //' @return The prediction intervals and estimates for the response variable of each
 //' unseen observation.
 //' @export
-//'
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 NumericMatrix PI_C(List lrbs, DataFrame x, double alpha){
   double lowerq = alpha/2;

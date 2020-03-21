@@ -1,0 +1,215 @@
+---
+title: "TestRandC"
+author: "William Shih, Ricardo Simpao, Nilay Varshney, Luke Yee"
+date: "3/17/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning = FALSE, message = FALSE}
+library(Rcpp)
+library(RcppArmadillo)
+library(rbenchmark)
+set.seed(121)
+sourceCpp("ctest.cpp")
+source("rtest.R")
+
+```
+
+## Benchmark calculating slope of p = 1, n = 200,000 with 100 replications
+
+The C++ version is about 3 times faster.
+
+```{r, echo = FALSE}
+Random = runif(200000,0,100000)
+AT = data.frame(x = 1:200000, y = 1:200000 + Random)
+
+
+x1 = runif(200000,0,1000) + runif(200000, 500, 1000)
+x2 = runif(200000,0,2000) + runif(200000, 1000, 2000)
+x3 = runif(200000,2000,3000) + runif(200000, 1000, 2000)
+x4 = runif(200000,2500,2750) + runif(200000, 1000, 2000)
+```
+
+```{r, echo = FALSE}
+y = x1 + x2 + x3 + x4 + Random^2 + runif(20000, 500, 777)
+xFrame = as.matrix(data.frame(x1,x2,x3,x4))
+x1 = runif(8000000,0,1000) + runif(8000000, 500, 1181)
+```
+
+
+
+```{r, echo = FALSE}
+FourtyX = matrix(x1, nrow = 200000, ncol = 40)
+```
+
+
+```{r, echo = FALSE}
+knitr::kable((benchmark("C++" = {calc_slopeC(AT)},
+          "lm.fit$coefficients[[2]]" = {lm.fit(as.matrix(data.frame(1, AT[[1]])), AT[[2]])$coefficients[[2]]},
+          "lm$coefficients[[2]]" = {lm(y ~ x, data = AT)$coefficients[[2]]},
+          "R" = {calc_slope(AT)},
+          replications = 100, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self"))))
+```
+
+
+
+
+## Benchmark multiplying 40\*200000 by 200000\*40 matrix with 5 replications
+
+
+```{r, echo = FALSE}
+knitr::kable(benchmark("%*%" = {t(FourtyX) %*% FourtyX},
+          "C++ without std::inner_product" = {multiply(t(FourtyX), FourtyX)},
+          "C++ with std::inner_product" = {multiply2(t(FourtyX), FourtyX)},
+          "C++ with RcppArmadillo" = {armamultiply(t(FourtyX), FourtyX)},
+          replications = 5, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self")))
+```
+
+The C++ versions are slower than using %\*% from base R when multiplying a 40\*200000 matrix by 200000\*40 matrix. The C++ version using std::inner_product is much faster than the C++ version without std::inner_product. Multiplying with RcppArmadillo is the fastest version for C++. Using std::inner_product multiplies a contiguous group of numbers by a contiguous group of numbers and sums them together. So we transpose the first matrix so that we can multiply a sequence of numbers by a sequence of numbers. 
+
+## Benchmark multiplying 4\*200000 by 200000\*4 matrix
+
+```{r, echo = FALSE}
+knitr::kable(benchmark("%*%" = {t(xFrame) %*% xFrame},
+          "C++ without std::inner_product" = {multiply(t(xFrame), xFrame)},
+          "C++ with std::inner_product" = {multiply2(t(xFrame), xFrame)},
+          "C++ with RcppArmadillo" = {armamultiply(t(xFrame), xFrame)},
+          replications = 100, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self")))
+
+```
+
+The C++ versions are slower than using %\*% from base R when multiplying a 4\*200000 matrix by 200000\*4 matrix. But C++ with std::inner_product is slightly slower than C++ without std::inner_product in this case. The sequence of numbers for std::inner_product is only 4 in this case, so the overhead of transposing the matrix is greater than the time save. The overhead from calling RcppArmadillo is also too much in this function as it turns out that C++ with RcppArmadillo is the slowest version.
+
+## Benchmark inverting 40\*40 matrix with 100,000 replications
+```{r, echo = FALSE}
+InvertThis = t(FourtyX) %*% FourtyX
+knitr::kable(benchmark("solve" = {solve(InvertThis)},
+          "C++ with RcppArmadillo" = {armainverse(InvertThis)},
+          "C++ with Gauss-Jordan Elimination" = {inverse(InvertThis)},
+          replications = 100000, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self")))
+```
+
+Inverting with RcppArmadillo is the fastest in this case. solve and C++ with Gauss-Jordan elimination is roughly the same.
+
+## Benchmark p = 4 and n = 200,000 Linear Regression with 100 replications
+
+```{r, echo = FALSE}
+#p = 4
+knitr::kable((benchmark("lm" = {lm(y ~ xFrame)},
+          ".lm.fit" = {.lm.fit(as.matrix(data.frame(1, xFrame)), y)},
+          "lm.fit" = {lm.fit(as.matrix(data.frame(1, xFrame)), y)},
+          "C++ without std::inner_product" = {linear_regC(xFrame, y)},
+          "C++ with std::inner_product" = {linear_regC2(xFrame, y)},
+          "C++ with RcppArmadillo" = {linear_regC3(xFrame, y)},
+          "R" = {linear_reg(xFrame, y)},
+            replications = 100, order = "elapsed",
+            columns = c("test","replications","elapsed","relative","user.self","sys.self"))))
+```
+
+C++ with RcppArmadillo is the fastest with 4 variables and 200,000 rows for linear regression. C++ saves very little time compared to R for linear regression.
+
+## Benchmark p = 1 and n = 200,000 Linear Regression with 200 replications 
+
+```{r, echo = FALSE}
+# p =1
+knitr::kable((benchmark("lm" = {lm(AT[[2]] ~ AT[[1]])},
+          ".lm.fit" = {.lm.fit(as.matrix(data.frame(1, AT[[1]])), as.vector(AT[[2]]))},
+          "lm.fit" = {lm.fit(as.matrix(data.frame(1, AT[[1]])), as.vector(AT[[2]]))},
+          "C++ without std::inner_product" = {linear_regC(as.matrix(AT[[1]]), as.vector(AT[[2]]))},
+          "C++ with std::inner_product" = {linear_regC2(as.matrix(AT[[1]]), as.vector(AT[[2]]))},
+          "C++ with RcppArmadillo" = {linear_regC3(as.matrix(AT[[1]]), as.vector(AT[[2]]))},
+          "R" = {linear_reg(as.matrix(AT[[1]]), as.vector(AT[[2]]))},
+          replications = 200, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self"))))
+```
+
+The increased overhead with RcppArmadillo and std::inner_product makes C++ without std::inner_product the fastest.
+
+## Benchmark p = 40 and n = 200,000 Linear Regression with 5 replications
+
+```{r, echo = FALSE}
+#p = 40
+knitr::kable((benchmark("lm" = {lm(y ~ FourtyX)},
+          ".lm.fit" = {.lm.fit(as.matrix(data.frame(1, FourtyX)), y)},
+          "lm.fit" = {lm.fit(as.matrix(data.frame(1, FourtyX)), y)},
+          "C++ without std::inner_product" = {linear_regC(FourtyX, y)},
+          "C++ with std::inner_product" = {linear_regC2(FourtyX, y)},
+          "C++ with RcppArmadillo" = {linear_regC3(FourtyX, y)},
+          "R" = {linear_reg(FourtyX, y)},
+          replications = 5, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self"))))
+```
+
+With more variables, C++ with RcppArmadillo saves relatively more time compared to R and other versions of C++.
+
+## Benchmark calling t distribution with 100,000 replications
+
+```{r, echo = FALSE}
+knitr::kable(benchmark("C++ using Boost" = {tc(0.99, 55)},
+          "C++ calling R" = {tr(0.99,55)},
+          "R" = {qt(0.99, 55)},
+          replications = 100000, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self")))
+  
+```
+
+Calling the t distribution is fastest with R and slower calling C++ with boost. It is much slower to call C++, then call back R. So using boost is faster than calling back R in the C++ function.
+
+## Benchmark 95% confidence interval of linear regression (p = 20, n = 200,000) result with 10,000 replications
+
+```{r, echo = FALSE}
+ThirtyX = FourtyX[,1:20]
+```
+
+
+```{r, echo = FALSE}
+colnames(ThirtyX) = c(paste0("X",1:20))
+l = lm(y ~ ., data = data.frame(cbind(ThirtyX,y)))
+l$effects = NULL
+```
+
+```{r, echo = FALSE}
+z = linear_reg(ThirtyX, y)
+
+knitr::kable(benchmark("C++" = {lr_coefficient_CI_C(z, 0.05)},
+          "R" = {lr_coefficient_CI(z, 0.05)},
+          "confint.lm" = {confint.lm(l)},
+          replications = 10000, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self")))
+
+```
+
+C++ is 2.3 times faster than the R version and 1,300 times faster than confint.lm. Complex functions such as confint.lm takes a very long time to run.
+
+## Benchmark 95% prediction interval of linear regression (p = 20, n = 200,000) result with 10,000 replications
+
+```{r, echo = FALSE}
+data = runif(21,0,10)
+data = data.frame(t(data))
+datanum = as.numeric(data)[-1]
+colnames(data) = names(l$coefficients)[-1]
+knitr::kable(benchmark("C++ with RcppArmadillo" = {lr_prediction_interval_C(z, datanum, 0.05)},
+          "C++ with std::inner_product" = {lr_prediction_interval_C2(z, datanum, 0.05)},             
+          "R" = {lr_prediction_interval(z, datanum, 0.05)},
+          "predict.lm" = {predict(l, data, interval = "prediction", level = 0.95)},
+          replications = 10000, order = "elapsed",
+          columns = c("test","replications","elapsed","relative","user.self","sys.self")))
+```
+
+C++ with RcppArmadillo is slightly faster than C++ with std::inner_product for the prediction interval calculation. We get a small time save with C++ compared to R, about a 2 times difference. Again, C++ with RcppArmadillo is much faster than a complex function such as predict.lm, being 150 times faster.
+
+# Code Appendix
+```{r, ref.label = knitr :: all_labels(), echo = TRUE, eval = FALSE}
+
+
+```
+
+

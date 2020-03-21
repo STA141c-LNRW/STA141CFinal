@@ -1,15 +1,20 @@
 #include <RcppArmadillo.h>
+
 using namespace Rcpp;
 
-//' This function takes in a list of linear regression coefficient estimates generated
+//' @name coef_CI_C
+//' @title Confidence Intervals and Estimates of Each Regression Coefficient
+//'
+//' @description This function takes in a list of linear regression coefficient estimates generated
 //' by a Bag of Little Bootstraps procedure. Then, empirical confidence intervals and
 //' point estimates of each coefficient are determined for each subsample. Afterwards,
 //' the endpoints of all confidence intervals are averaged to form overall confidence
 //' intervals, and point estimates are averaged to form overall estimates. It should be
 //' noted that the confidence intervals are not multiple confidence intervals. For
 //' Bonferroni-corrected confidence intervals, divide the desired value of alpha by the
-//' number of regression coefficients. The difference between this function and coef_CI
-//' is that this function is written in C++ instead of R for faster performance.
+//' number of regression coefficients. This function is written in C++ instead of R for faster performance
+//' The function transposes the coefficient matrices so it can be sorted as a vector and no copies have to be made.
+//' The quantiles in the function work differently than the quantile in base R so the result will not be the same as coef_CI.
 //'
 //' @param lrbs A linear_reg_bs or linear_reg_bs_par object containing BLB regression
 //' coefficient estimates.
@@ -17,8 +22,6 @@ using namespace Rcpp;
 //' @return The overall confidence interval for each regression coefficient, along with
 //' its overall estimate.
 //' @export
-//'
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 NumericMatrix coef_CI_C(List lrbs, double alpha){
   double lowerq = alpha/2;

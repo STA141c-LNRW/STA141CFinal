@@ -1,0 +1,116 @@
+---
+title: "Package demo"
+author: "William Shih, Ricardo Simpao, Nilay Varshney, Luke Yee"
+date: "3/20/2020"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Here is an example of how our package functions run. For our data set, we are using a "SGEMM GPU kernel performance Data Set," which measures the running times of a matrix-matrix product, given different parameter combinations.
+
+Below, all 4 functions (calculating linear regression bootstrap, calculating coefficient confidence intervals, prediction intervals, and confidene intervals for sigma^2) are much faster with C++ than R. Overhead with functions such as map, apply, and reduce take much longer than when compared to C++ version that only uses RcppArmadillo and functions from std namespace. Use of syntactic sugar from Rcpp is minimized in the C++ functions.
+
+```{r load, message = FALSE, warning = FALSE}
+library(devtools)
+library(tidyverse)
+library(STA141CFinal)
+library(furrr)
+
+set.seed(141)
+dat = read_csv("sgemm_product.csv")
+dat = dat[sample(241000, 1000),]
+dat2 = dat[1:100,]
+```
+
+```{r linear regression with bootstrap, cache = TRUE}
+#We specifiy a specific column set
+y = dat$`Run1 (ms)`
+x = dat[,1:(ncol(dat)-4)]
+
+#linear model objects
+fit = linear_reg_bs_C(x, y, s = 10, r = 1000)
+```
+
+# Linear Regression with blb (n = 1000, p = 15, subsets = 10, and replications = 1000)
+
+```{r, echo = FALSE, cache = TRUE}
+(b0 = bench::mark(
+  linear_reg_bs(x = x, y = y, s = 10, r = 1000),
+  linear_reg_bs_par(x = x, y = y, s = 10, r = 1000),
+ linear_reg_bs_C(x, y, s = 10, r = 1000),
+  check = FALSE)
+)
+
+ggplot2::autoplot(b0)
+```
+
+### The C++ version is about 10 times faster than either of the R versions. The C++ version uses RcppArmadillo to multiply matrices as that was found to be the fastest version available. RcppArmadillo was generally faster than using multiplying matrices using std::inner_product. The R parallel version took just as long as the R non-parallel version. 
+
+# 95 % Confidence Interval for Variable Coefficients (original dataset has 1000 replications and 10 subsets)
+
+```{r CI of coef, cache = TRUE}
+coef_CI(fit, alpha = 0.05)
+
+coef_CI_par(fit,alpha = 0.05)
+coef_CI_C(fit,alpha = 0.05)
+
+
+(b1 = bench::mark(
+  coef_CI(fit, alpha = 0.05),
+  coef_CI_par(fit,alpha = 0.05),
+  coef_CI_C(fit, alpha = 0.05),
+  check = FALSE)
+)
+
+ggplot2::autoplot(b1)
+```
+
+### The C++ version was only about 5 times faster than the R version. The C++ uses 1/7 as much memory as the R version. Also note that the C++ version calculates the quantiles differently from the R version. Therefore, the lower and upper bounds are slightly different in the C++ and R versions.
+
+# 95% Prediction Interval (with n = 100 and p = 14 (original dataset has 1000 replications and 10 subsets))
+
+```{r prediction interval, cache = TRUE}
+plan(multiprocess, workers = 4)
+PI(fit, dat2[1:3, 1:14], alpha = 0.05)
+PI_par(fit, dat2[1:3, 1:14], alpha = 0.05)
+PI_C(fit, dat2[1:3, 1:14], alpha = 0.05)
+
+(b2 = bench::mark(
+  PI(fit, dat2[1:3, 1:14], alpha = 0.05),
+  PI_par(fit, dat2[1:3, 1:14], alpha = 0.05),
+  PI_C(fit, dat2[1:3, 1:14], alpha = 0.05),
+  check = FALSE)
+)
+
+ggplot2::autoplot(b2)
+```
+
+### The C++ version to calculate the 100 95% confidence intervals was more than 20 times faster than the R version. Again, the C++ and R confidence intervals are slightly difference due to calculating the quantiles differently.
+
+# 95 % Confindence Interval for Variance (original dataset has 1000 replications and 10 subsets)
+
+```{r variance interval, cache = TRUE}
+s2_CI(fit, alpha = 0.05)
+s2_CI_par(fit, alpha = 0.05)
+s2_CI_C(fit, alpha = 0.05)
+
+(b3 = bench::mark(
+  s2_CI(fit, alpha = 0.05),
+  s2_CI_par(fit, alpha = 0.05),
+  s2_CI_C(fit, alpha = 0.05),
+  check = FALSE)
+)
+
+ggplot2::autoplot(b3)
+```
+
+
+
+### The C++ version is about 19 times faster than the R version. The parallel version is not optimal for this case as it takes 100 times longer than the non-parallel R version. For some reason, the parallel version is not found to be faster than the non-parallel version for any of the 4 functions. But the C++ function is much faster anyways, so that is the one to use when trying to calculate these as fast as possible.
+
+
+
