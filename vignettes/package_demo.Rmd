@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Here is an example of how our package functions run. For our data set, we are using a "SGEMM GPU kernel performance Data Set," which measures the running times of a matrix-matrix product, given different parameter combinations.
 
-Below, all 4 functions (calculating linear regression bootstrap, calculating coefficient confidence intervals, prediction intervals, and confidene intervals for sigma^2) are much faster with C++ than R. Overhead with functions such as map, apply, and reduce take much longer than when compared to C++ version that only uses RcppArmadillo and functions from std namespace. Use of syntactic sugar from Rcpp is minimized in the C++ functions.
+Below, all 4 functions in the package (calculating linear regression bootstrap, calculating confidence intervals for coefficients, prediction intervals, and confidence intervals for sigma^2) are much faster using C++ than using R. Overhead with complex functions such as map, apply, and reduce may takes a large amount of time with R so that the C++ version that only uses RcppArmadillo and functions from std namespace is much faster. Use of syntactic sugar from Rcpp is minimized in the C++ functions.
 
 ```{r load, message = FALSE, warning = FALSE}
 library(devtools)
