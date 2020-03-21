@@ -1,5 +1,4 @@
 #include <RcppArmadillo.h>
-
 using namespace Rcpp;
 
 //' This function takes in a dataframe of observations, split into explanatory variables
@@ -11,6 +10,7 @@ using namespace Rcpp;
 //' and each regression coefficient, as well as prediction intervals for new data. The
 //' difference between this function and linear_reg_bs is that this function is written
 //' in C++ instead of R for faster performance.
+//'
 //' @param x A dataframe of the explanatory variables of all observations.
 //' @param y A numeric vector of the response variable of all observations.
 //' @param s The number of subsamples to split the data into. Default value is 10.
@@ -23,8 +23,8 @@ using namespace Rcpp;
 //' This list has an element for each subsample, and each element stores the estimates
 //' for each bootstrap sample in a vector.
 //' @export
+//'
 // [[Rcpp::depends(RcppArmadillo)]]
-
 // [[Rcpp::export]]
 List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r){
   int n = x.nrows();

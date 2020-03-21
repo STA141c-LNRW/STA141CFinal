@@ -1,3 +1,5 @@
-#' @useDynLib STA141CFinal, .registration = TRUE
+## usethis namespace: start
+#' @useDynLib STA141CFinal
 #' @importFrom Rcpp sourceCpp
-#' NULL
+## usethis namespace: end
+NULL

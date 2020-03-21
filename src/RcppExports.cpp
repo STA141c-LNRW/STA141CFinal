@@ -6,6 +6,31 @@
 
 using namespace Rcpp;
 
+// PI_C
+NumericMatrix PI_C(List lrbs, DataFrame x, double alpha);
+RcppExport SEXP _STA141CFinal_PI_C(SEXP lrbsSEXP, SEXP xSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type lrbs(lrbsSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(PI_C(lrbs, x, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
+// coef_CI_C
+NumericMatrix coef_CI_C(List lrbs, double alpha);
+RcppExport SEXP _STA141CFinal_coef_CI_C(SEXP lrbsSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type lrbs(lrbsSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(coef_CI_C(lrbs, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
 // linear_reg_bs_C
 List linear_reg_bs_C(DataFrame x, arma::colvec y, int s, int r);
 RcppExport SEXP _STA141CFinal_linear_reg_bs_C(SEXP xSEXP, SEXP ySEXP, SEXP sSEXP, SEXP rSEXP) {
@@ -20,9 +45,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// s2_CI_C
+NumericVector s2_CI_C(List lrbs, double alpha);
+RcppExport SEXP _STA141CFinal_s2_CI_C(SEXP lrbsSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type lrbs(lrbsSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(s2_CI_C(lrbs, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_STA141CFinal_PI_C", (DL_FUNC) &_STA141CFinal_PI_C, 3},
+    {"_STA141CFinal_coef_CI_C", (DL_FUNC) &_STA141CFinal_coef_CI_C, 2},
     {"_STA141CFinal_linear_reg_bs_C", (DL_FUNC) &_STA141CFinal_linear_reg_bs_C, 4},
+    {"_STA141CFinal_s2_CI_C", (DL_FUNC) &_STA141CFinal_s2_CI_C, 2},
     {NULL, NULL, 0}
 };
 

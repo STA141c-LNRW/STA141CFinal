@@ -1,0 +1,56 @@
+---
+title: "User Guide"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{User_Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This user guide shows how to use the STA141CFinal package. The dataset that will be used is the SGEMM GPU Kernel Performance dataset of the UC Irvine Machine Learning Repository, and it is part of the package.
+
+```{r, message = "hold"}
+library(STA141CFinal)
+data("sgemm_product")
+```
+
+The `linear_reg_bs` function splits the given dataset into `s` samples, then generates `r` bootstrap samples from each sample. By default, `s` is 10 and `r` is 1000. Afterwards, a linear regression model is fit on all bootstrap samples, and the linear regression coefficient estimates, as well as the error variance estimates, are recorded and returned. This is the first step of a Bag of Little Bootstraps (BLB) procedure for multiple linear regression. Because this operation requires a lot of time and memory, users have the option to use `linear_reg_bs_par` instead. This function is the same as `linear_reg_bs` except that it uses parallel processing, thus using less time and memory. Users can also use `linear_reg_bs_C`, which is the `linear_reg_bs` function written in C++, for the same benefit.
+
+```{r, warning = FALSE, results = "hold"}
+x <- sgemm_product[-15]
+y <- sgemm_product$`Run1 (ms)`
+plan(multiprocess, workers = 4) # Needed for parallelization to work
+
+# Ideally, r should be much larger, but then the code would take too long to run.
+bench::mark(lrbs <- linear_reg_bs(x, y, 5, 50))
+bench::mark(lrp <- linear_reg_bs_par(x, y, 5, 50))
+bench::mark(lrc <- linear_reg_bs_C(x, y, 5, 50))
+```
+
+After the `linear_reg_bs` object is created, it can be used to determine confidence intervals for the regression coefficients and the error variance. It can also be used to determine prediction intervals for new data. Note that the significance level (`alpha` = 0.05 by default) is only accurate for single intervals, and that it should be adjusted accordingly if multiple intervals are to be generated.
+
+For error variance (`s2_CI_par` or `s2_CI_C` can also be used if so desired):
+
+```{r}
+lrs2ci <- s2_CI(lrbs)
+lrs2ci
+```
+
+For regression coefficients (`coef_CI_par` or `coef_CI_C` can also be used if so desired):
+
+```{r}
+# This example produces Bonferroni-corrected intervals with 90% confidence for four 
+# coefficients (the first one is for the intercept)
+lrcci <- coef_CI(lrbs, alpha = (0.1 / 4))[1:4, ]
+lrcci
+```
+
+For new data (`PI_par` or `PI_C` can also be used if so desired):
+
+```{r}
+# This example produces Bonferroni-corrected intervals with 90% confidence for four 
+# observations
+newdata <- x[1:4,]
+lrndpi <- PI(lrbs, newdata, alpha = (0.1 / 4))
+lrndpi
+```
