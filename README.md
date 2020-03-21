@@ -1,6 +1,4 @@
 # STA141CFinal
-Multiple Linear Regression Using BLB
-
 Implementation of Multiple Linear Regression using BLB
 
 Final Project for STA 141C at UC Davis, Winter 2020
@@ -12,5 +10,3 @@ This R package provides functions for fitting linear regression models on datase
 The dataset used in the user guide can be found at the link below. Note that the three rightmost columns are to be disregarded as the dataset has four response variables.
 
 archive.ics.uci.edu/ml/datasets/SGEMM+GPU+kernel+performance
-
-© 2020 GitHub, Inc.
